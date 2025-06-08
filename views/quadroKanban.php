@@ -202,35 +202,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const columns = document.querySelectorAll('.kanban-tasks');
     
     let draggedTask = null;
-    
-    // Configurar eventos de drag para as tarefas
+      // Configurar eventos de drag para as tarefas
     tasks.forEach(task => {
         task.addEventListener('dragstart', function(e) {
             draggedTask = this;
+            this.classList.add('dragging');
             this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
         });
         
         task.addEventListener('dragend', function(e) {
             this.style.opacity = '1';
+            this.classList.remove('dragging');
             draggedTask = null;
+            
+            // Remover indicadores visuais de todas as colunas
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                col.classList.remove('drag-over');
+            });
         });
     });
     
-    // Configurar eventos de drop para as colunas
-    columns.forEach(column => {
+    // Configurar eventos de drop para as colunas inteiras
+    document.querySelectorAll('.kanban-column').forEach(column => {
+        const dropZone = column.querySelector('.kanban-tasks');
+        
         column.addEventListener('dragover', function(e) {
             e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        });
+        
+        column.addEventListener('dragleave', function(e) {
+            // Só remove a classe se realmente saiu da coluna
+            if (!this.contains(e.relatedTarget)) {
+                this.classList.remove('drag-over');
+            }
         });
         
         column.addEventListener('drop', function(e) {
             e.preventDefault();
+            this.classList.remove('drag-over');
             
             if (draggedTask) {
                 const taskId = draggedTask.getAttribute('data-id');
-                const newStatus = this.id;
+                const newStatus = dropZone.id;
+                
+                // Remover mensagem de coluna vazia se existir
+                const emptyMessage = dropZone.querySelector('.empty-column');
+                if (emptyMessage) {
+                    emptyMessage.remove();
+                }
                 
                 // Mover visualmente a tarefa
-                this.appendChild(draggedTask);
+                dropZone.appendChild(draggedTask);
                 
                 // Atualizar no banco de dados
                 updateTaskStatus(taskId, newStatus);
@@ -307,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateStats(stats = null) {
         if (stats) {
             // Usar dados do servidor se disponíveis
-            document.querySelector('.bg-blue-50:first-child .text-2xl').textContent = stats.total;
+            document.querySelector('.bg-blue-50:first-child .text-2xl').textContent = stats.total_tarefas;
             document.querySelector('.bg-yellow-50 .text-2xl').textContent = stats.pendentes;
             document.querySelector('.bg-blue-50:nth-child(3) .text-2xl').textContent = stats.em_andamento;
             document.querySelector('.bg-green-50 .text-2xl').textContent = stats.concluidas;
@@ -637,13 +662,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Melhorar visual durante drag */
 .kanban-task.dragging {
-    transform: rotate(5deg);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: rotate(3deg);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    z-index: 1000;
 }
 
-.kanban-tasks.drag-over {
+.kanban-column.drag-over {
     background-color: #e0f2fe;
     border: 2px dashed #0284c7;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+.kanban-column.drag-over .kanban-header {
+    color: #0284c7;
+}
+
+/* Aumentar a área de drop */
+.kanban-column {
+    position: relative;
+}
+
+.kanban-column::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.kanban-column.drag-over::before {
+    background-color: rgba(2, 132, 199, 0.1);
+    border: 2px dashed #0284c7;
+    pointer-events: none;
 }
 
 /* Responsividade aprimorada */

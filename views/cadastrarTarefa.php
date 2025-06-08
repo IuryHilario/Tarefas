@@ -117,13 +117,12 @@ verificarAcessoTela('cadastrarTarefa.php');
                                     </div>
                                 </td>
                                 <td class="p-3 text-sm text-gray-700"><?php echo htmlspecialchars($tarefa['projeto_nome'] ?: 'N/A'); ?></td>
-                                <td class="p-3 text-sm text-gray-700"><?php echo htmlspecialchars($tarefa['responsavel_nome'] ?: 'N/A'); ?></td>
-                                <td class="p-3">
-                                    <span class="px-2 py-1 text-xs rounded-full 
+                                <td class="p-3 text-sm text-gray-700"><?php echo htmlspecialchars($tarefa['responsavel_nome'] ?: 'N/A'); ?></td>                                <td class="p-3">
+                                    <span class="px-2 py-1 text-xs rounded-full whitespace-nowrap
                                         <?php 
                                         switch($tarefa['status']) {
                                             case 'pendente': echo 'bg-yellow-100 text-yellow-800'; break;
-                                            case 'em_andamento': echo 'bg-blue-100 text-blue-800'; break;
+                                            case 'em_andamento': echo 'bg-blue-100 text-blue-600'; break;
                                             case 'concluida': echo 'bg-green-100 text-green-800'; break;
                                         }
                                         ?>">

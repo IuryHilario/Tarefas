@@ -38,25 +38,23 @@ function isValidStatus($status) {
 // Função para calcular estatísticas
 function calculateStats($mysqli, $projeto_id = null) {
     $where_clause = $projeto_id ? "WHERE projeto_id = " . (int)$projeto_id : "";
-    
     $query = "SELECT 
                 status,
                 COUNT(*) as count
               FROM tarefas 
               $where_clause
               GROUP BY status";
-    
     $result = $mysqli->query($query);
-    $stats = ['total' => 0, 'pendentes' => 0, 'em_andamento' => 0, 'concluidas' => 0];
-    
+    $stats = ['pendentes' => 0, 'em_andamento' => 0, 'concluidas' => 0];
     if ($result) {
         while ($row = $result->fetch_assoc()) {
-            $stats[$row['status']] = (int)$row['count'];
-            $stats['total'] += (int)$row['count'];
+            if ($row['status'] === 'pendente') $stats['pendentes'] = (int)$row['count'];
+            if ($row['status'] === 'em_andamento') $stats['em_andamento'] = (int)$row['count'];
+            if ($row['status'] === 'concluida') $stats['concluidas'] = (int)$row['count'];
         }
         $result->free();
     }
-    
+    $stats['total_tarefas'] = $stats['pendentes'] + $stats['em_andamento'] + $stats['concluidas'];
     return $stats;
 }
 
@@ -93,8 +91,8 @@ try {
                 $task_data = $task_result->fetch_assoc();
                 $task_query->close();
                 
-                // Calcular estatísticas atualizadas
-                $stats = calculateStats($mysqli, $task_data['projeto_id'] ?? null);
+                // Calcular estatísticas atualizadas (sem filtro de projeto para o total global)
+                $stats = calculateStats($mysqli, null);
                 
                 $response = [
                     'success' => true,
